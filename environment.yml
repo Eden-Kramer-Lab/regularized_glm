@@ -8,7 +8,6 @@ dependencies:
 - scipy
 - statsmodels
 - matplotlib
-- patsy
 - jupyter
 - nb_conda
 - setuptools
