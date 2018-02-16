@@ -8,8 +8,8 @@ from .stats import (_weighted_design_matrix_svd, get_coefficient_covariance,
 _EPS = np.finfo(float).eps
 
 
-def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None, penalty=_EPS,
-                   family=families.Gaussian(),
+def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
+                   penalty=_EPS, family=families.Gaussian(),
                    max_iterations=25, prior_weights=None,
                    offset=None, tolerance=1E-8):
     if design_matrix.ndim < 2:
