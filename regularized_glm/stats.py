@@ -30,10 +30,9 @@ def get_coefficient_covariance(U, singular_values, Vt, scale):
 def pearson_chi_square(response, predicted_response, prior_weights, variance,
                        degrees_of_freedom):
     residual = response - predicted_response
-    n_observations = response.shape[0]
-    residual_degrees_of_freedom = n_observations - degrees_of_freedom
-    return (np.sum(prior_weights * residual ** 2 / variance(predicted_response))
-            / residual_degrees_of_freedom)
+    residual_degrees_of_freedom = response.shape[0] - degrees_of_freedom
+    chi_square = prior_weights * residual ** 2 / variance(predicted_response)
+    return np.sum(chi_square) / residual_degrees_of_freedom
 
 
 def estimate_scale(family, response, predicted_response, prior_weights,
