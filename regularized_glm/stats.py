@@ -1,4 +1,5 @@
 import numpy as np
+from statsmodels.api import families
 
 
 def _weighted_design_matrix_svd(design_matrix, sqrt_penalty_matrix, weights):
@@ -33,3 +34,16 @@ def pearson_chi_square(response, predicted_response, prior_weights, variance,
     residual_degrees_of_freedom = n_observations - degrees_of_freedom
     return (np.sum(prior_weights * residual ** 2 / variance(predicted_response))
             / residual_degrees_of_freedom)
+
+
+def estimate_scale(family, response, predicted_response, prior_weights,
+                   degrees_of_freedom):
+    if isinstance(family, (families.Binomial, families.Poisson)):
+        scale = 1.0
+        is_estimated_scale = False
+    else:
+        scale = pearson_chi_square(
+            response, predicted_response, prior_weights, family.variance,
+            degrees_of_freedom)
+        is_estimated_scale = True
+    return scale, is_estimated_scale

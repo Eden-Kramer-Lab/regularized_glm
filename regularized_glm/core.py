@@ -3,7 +3,8 @@ import scipy.linalg
 from statsmodels.api import families
 
 from .stats import (_weighted_design_matrix_svd, get_coefficient_covariance,
-                    get_effective_degrees_of_freedom, pearson_chi_square)
+                    get_effective_degrees_of_freedom, pearson_chi_square,
+                    estimate_scale)
 
 _EPS = np.finfo(float).eps
 
@@ -65,14 +66,9 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
         design_matrix, sqrt_penalty_matrix, weights)
 
     effective_degrees_of_freedom = get_effective_degrees_of_freedom(U)
-    if isinstance(family, (families.Binomial, families.Poisson)):
-        scale = 1.0
-        is_estimated_scale = 0.0
-    else:
-        scale = pearson_chi_square(
-            response, predicted_response, prior_weights, family.variance,
-            effective_degrees_of_freedom)
-        is_estimated_scale = 1.0
+    scale, is_estimated_scale = estimate_scale(
+        family, response, predicted_response, prior_weights,
+        effective_degrees_of_freedom)
     coefficient_covariance = get_coefficient_covariance(
         U, singular_values, Vt, scale)
     deviance = family.deviance(response, predicted_response, weights, scale)
