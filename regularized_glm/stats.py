@@ -26,7 +26,10 @@ def _weighted_design_matrix_svd(design_matrix, sqrt_penalty_matrix, weights):
     # Keep the linearly independent columns using svd
     svd_error = (singular_values.max() * np.max(design_matrix.shape)
                  * np.finfo(singular_values.dtype).eps)
-    U = U[:n_covariates, singular_values > svd_error]
+    is_independent = singular_values > svd_error
+    U = U[:n_covariates, is_independent]
+    singular_values = singular_values[is_independent, is_independent]
+    Vt = Vt[:, is_independent]
 
     return U, singular_values, Vt
 
