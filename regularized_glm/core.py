@@ -34,7 +34,7 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None, penalty=_E
 
     augmented_weights = np.ones((n_covariates,), dtype=response.dtype)
     full_design_matrix = np.concatenate((design_matrix, sqrt_penalty_matrix))
-    augmented_response = np.zeros((n_covariates,))
+    augmented_response = np.zeros((n_covariates,), dtype=response.dtype)
     coefficients = np.zeros((n_covariates,))
 
     for _ in range(max_iterations):
