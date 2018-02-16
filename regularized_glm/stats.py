@@ -12,7 +12,8 @@ def _weighted_design_matrix_svd(design_matrix, sqrt_penalty_matrix, weights):
 
 
 def get_effective_degrees_of_freedom(U):
-    return np.sum(U.ravel() * U.ravel()) # np.trace(U @ U.T), trace of the influence matrix
+    '''Trace of the influence matrix'''
+    return np.sum(U * U)
 
 
 def get_coefficient_covariance(U, singular_values, Vt):
