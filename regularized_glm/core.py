@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.linalg
+from statsmodels.api import families
 
 from .stats import (_weighted_design_matrix_svd, get_coefficient_covariance,
                     get_effective_degrees_of_freedom)
@@ -8,8 +9,7 @@ _EPS = np.finfo(float).eps
 
 
 def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None, penalty=_EPS,
-                   link=None, inverse_link=None, link_derivative=None, variance=None,
-                   starting_predicted_response=None, deviance=None, log_likelihood=None,
+                   family=families.Gaussian(),
                    max_iterations=25, prior_weights=None,
                    offset=None, tolerance=1E-8):
     if design_matrix.ndim < 2:
@@ -27,8 +27,8 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None, penalty=_E
 
     is_converged = False
 
-    predicted_response = starting_predicted_response(response)
-    linear_predictor = link(predicted_response)
+    predicted_response = family.starting_mu(response)
+    linear_predictor = family.link(predicted_response)
 
     sqrt_penalty_matrix = np.sqrt(penalty) * sqrt_penalty_matrix
 
@@ -38,13 +38,11 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None, penalty=_E
     coefficients = np.zeros((n_covariates,))
 
     for _ in range(max_iterations):
-        pseudo_data = (linear_predictor
-                       + (response - predicted_response)
-                       * link_derivative(predicted_response)
-                       - offset)
-        weights = prior_weights / (
-            variance(predicted_response)
-            * link_derivative(predicted_response) ** 2)
+        link_derivative = family.link.deriv(predicted_response)
+        pseudo_data = (linear_predictor + (response - predicted_response)
+                       * link_derivative - offset)
+        weights = prior_weights / (family.variance(predicted_response)
+                                   * link_derivative ** 2)
 
         full_response = np.concatenate((pseudo_data, augmented_response))
         full_weights = np.concatenate((np.sqrt(weights), augmented_weights))
@@ -55,7 +53,7 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None, penalty=_E
             full_response * full_weights)[0]
 
         linear_predictor = offset + design_matrix @ coefficients
-        predicted_response = inverse_link(linear_predictor)
+        predicted_response = family.link.inverse(linear_predictor)
 
         # use deviance change instead?
         coefficients_change = np.linalg.norm(coefficients - coefficients_old)
@@ -68,9 +66,9 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None, penalty=_E
 
     effective_degrees_of_freedom = get_effective_degrees_of_freedom(U)
     coefficient_covariance = get_coefficient_covariance(U, singular_values, Vt)
-    deviance = deviance(response, predicted_response, weights)
-    aic = -2 * log_likelihood(response, predicted_response,
-                              weights) + 2 * (effective_degrees_of_freedom + 1)
+    deviance = family.deviance(response, predicted_response, weights)
+    aic = (-2 * family.loglike(response, predicted_response, weights)
+           + 2 * (effective_degrees_of_freedom + 1))
 
     return coefficients, is_converged, coefficient_covariance, aic, deviance
 
