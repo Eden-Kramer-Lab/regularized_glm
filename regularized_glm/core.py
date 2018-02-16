@@ -65,10 +65,22 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None, penalty=_E
         design_matrix, sqrt_penalty_matrix, weights)
 
     effective_degrees_of_freedom = get_effective_degrees_of_freedom(U)
-    coefficient_covariance = get_coefficient_covariance(U, singular_values, Vt)
-    deviance = family.deviance(response, predicted_response, weights)
+    if isinstance(family, (families.Binomial, families.Poisson)):
+        scale = 1.0
+        is_estimated_scale = 0.0
+    else:
+        residual = response - predicted_response
+        residual_degrees_of_freedom = (n_observations
+                                       - effective_degrees_of_freedom)
+        scale = (np.sum(prior_weights * residual ** 2
+                        / family.variance(predicted_response))
+                 / residual_degrees_of_freedom)
+        is_estimated_scale = 1.0
+    coefficient_covariance = get_coefficient_covariance(U, singular_values, Vt) * scale
+    deviance = family.deviance(response, predicted_response, weights, scale)
     aic = (-2 * family.loglike(response, predicted_response, weights)
-           + 2 * (effective_degrees_of_freedom + 1))
+           + 2 * (effective_degrees_of_freedom + 1)
+           + 2 * is_estimated_scale)
 
     return coefficients, is_converged, coefficient_covariance, aic, deviance
 
