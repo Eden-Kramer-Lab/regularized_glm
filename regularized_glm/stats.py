@@ -1,3 +1,6 @@
+import numpy as np
+
+
 def _weighted_design_matrix_svd(design_matrix, sqrt_penalty_matrix, weights):
     _, R = np.linalg.qr(np.sqrt(weights[:, np.newaxis]) * design_matrix)
     U, singular_values, Vt = np.linalg.svd(
