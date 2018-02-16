@@ -24,3 +24,12 @@ def get_coefficient_covariance(U, singular_values, Vt, scale):
     '''Frequentist Covariance Sandwich Estimator'''
     PKt = Vt @ np.diag(1 / singular_values) @ U.T
     return PKt @ PKt.T * scale
+
+
+def pearson_chi_square(response, predicted_response, prior_weights, variance,
+                       degrees_of_freedom):
+    residual = response - predicted_response
+    n_observations = response.shape[0]
+    residual_degrees_of_freedom = n_observations - degrees_of_freedom
+    return (np.sum(prior_weights * residual ** 2 / variance(predicted_response))
+            / residual_degrees_of_freedom)
