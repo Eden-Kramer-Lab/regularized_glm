@@ -13,6 +13,31 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
                    penalty=_EPS, family=families.Gaussian(),
                    max_iterations=25, prior_weights=None,
                    offset=None, tolerance=1E-8):
+    '''Estimate coefficients and associated statistics of models in the
+    exponential family.
+
+    Parameters
+    ----------
+    design_matrix : ndarray, shape (n_observations, n_covariates)
+    response : ndarray, shape (n_observations,)
+    sqrt_penalty_matrix : ndarray, optional,
+                          shape (n_observations, n_observations)
+    penalty : ndarray, optional, shape (n_observations,)
+    family : statsmodels.api.family instance, optional
+    max_iterations : int, optional
+    prior_weights : ndarray, optional, shape (n_observations,)
+    offset : ndarray, optional, shape (n_observations,)
+    tolerance : float, optional
+
+    Returns
+    -------
+    coefficients : ndarray, shape (n_covariates,)
+    is_converged : bool
+    coefficient_covariance : ndarray, shape (n_covariates, n_covariates)
+    aic : float
+    deviance : float
+
+    '''
     if design_matrix.ndim < 2:
         design_matrix = design_matrix[:, np.newaxis]
     n_observations, n_covariates = design_matrix.shape
