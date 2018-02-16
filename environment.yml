@@ -1,0 +1,17 @@
+name: regularized_glm
+channels:
+- defaults
+- conda-forge
+dependencies:
+- "python>=3.4"
+- numpy
+- scipy
+- statsmodels
+- matplotlib
+- patsy
+- jupyter
+- nb_conda
+- setuptools
+- pytest
+- pytest-cov
+- coveralls
