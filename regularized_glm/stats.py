@@ -199,20 +199,20 @@ def estimate_unbiased_risk_estimator(deviance, n_observations,
 
 def estimate_generalized_cross_validation(deviance, n_observations,
                                           degrees_of_freedom, extra_penalty=1):
-        '''
+    '''
 
-        Parameters
-        ----------
-        deviance : float
-        n_observations : int
-        degrees_of_freedom : float
-        extra_penalty : float
+    Parameters
+    ----------
+    deviance : float
+    n_observations : int
+    degrees_of_freedom : float
+    extra_penalty : float
 
-        Returns
-        -------
-        generalized_cross_validation : float
+    Returns
+    -------
+    generalized_cross_validation : float
 
-        '''
+    '''
     numerator = n_observations * deviance
     denominator = (n_observations - extra_penalty * degrees_of_freedom) ** 2
     return numerator / denominator
@@ -259,7 +259,6 @@ def likelihood_ratio_test(deviance_full, deviance_restricted,
     p_value : float
 
     '''
-
     degrees_of_freedom = (degrees_of_freedom_restricted
                           - degrees_of_freedom_full)
     likelihood_ratio = deviance_restricted - deviance_full
