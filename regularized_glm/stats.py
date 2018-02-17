@@ -157,7 +157,21 @@ def estimate_aicc(log_likelihood, degrees_of_freedom, n_observations):
         (n_observations - degrees_of_freedom - 1))
     return aic + sample_size_penalty
 
+
 def estimate_bic(log_likelihood, degrees_of_freedom, n_observations):
+    '''Bayesian Information Criterion
+
+    Parameters
+    ----------
+    log_likelihood : float
+    degrees_of_freedom : int or float
+    n_observations : int
+
+    Returns
+    -------
+    bic : float
+
+    '''
     return -2 * log_likelihood + np.log(n_observations) * degrees_of_freedom
 
 
