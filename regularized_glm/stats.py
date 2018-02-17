@@ -160,9 +160,9 @@ def likelihood_ratio_test(deviance_full, deviance_restricted,
 
     '''
 
-    degrees_of_freedom = (degrees_of_freedom_full
-                          - degrees_of_freedom_restricted)
-    likelihood_ratio = deviance_full - deviance_restricted
+    degrees_of_freedom = (degrees_of_freedom_restricted
+                          - degrees_of_freedom_full)
+    likelihood_ratio = deviance_restricted - deviance_full
     p_value = scipy.stats.chi2.sf(likelihood_ratio, df=degrees_of_freedom)
 
     return likelihood_ratio, p_value
