@@ -29,7 +29,7 @@ def _weighted_design_matrix_svd(design_matrix, sqrt_penalty_matrix, weights):
                  * np.finfo(singular_values.dtype).eps)
     is_independent = singular_values > svd_error
     U = U[:n_covariates, is_independent]
-    singular_values = singular_values[is_independent, is_independent]
+    singular_values = singular_values[is_independent]
     Vt = Vt[:, is_independent]
 
     return U, singular_values, Vt
