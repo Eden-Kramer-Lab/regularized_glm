@@ -2,9 +2,10 @@ import numpy as np
 import scipy.linalg
 from statsmodels.api import families
 
-from .stats import (_weighted_design_matrix_svd, get_coefficient_covariance,
+from .stats import (_weighted_design_matrix_svd, estimate_scale,
+                    get_coefficient_covariance,
                     get_effective_degrees_of_freedom, pearson_chi_square,
-                    estimate_scale)
+                    estimate_aic)
 
 _EPS = np.finfo(float).eps
 
@@ -36,6 +37,9 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
     coefficient_covariance : ndarray, shape (n_covariates, n_covariates)
     aic : float
     deviance : float
+    residual_degrees_of_freedom : int or float
+    log_likelihood : float
+    scale : float
 
     '''
     if design_matrix.ndim < 2:
@@ -96,12 +100,15 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
         effective_degrees_of_freedom)
     coefficient_covariance = get_coefficient_covariance(
         U, singular_values, Vt, scale)
+    residual_degrees_of_freedom = n_observations - effective_degrees_of_freedom
     deviance = family.deviance(response, predicted_response, weights, scale)
-    aic = (-2 * family.loglike(response, predicted_response, weights)
-           + 2 * (effective_degrees_of_freedom + 1)
-           + 2 * is_estimated_scale)
+    log_likelihood = family.loglike(response, predicted_response, weights,
+                                    scale)
+    aic = estimate_aic(log_likelihood, effective_degrees_of_freedom,
+                       is_estimated_scale)
 
-    return coefficients, is_converged, coefficient_covariance, aic, deviance
+    return (coefficients, is_converged, coefficient_covariance, aic, deviance,
+            residual_degrees_of_freedom, log_likelihood, scale)
 
 
 def weighted_least_squares(response, design_matrix, weights):
