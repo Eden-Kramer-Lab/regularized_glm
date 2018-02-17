@@ -68,8 +68,7 @@ def get_coefficient_covariance(U, singular_values, Vt, scale):
     return PKt @ PKt.T * scale
 
 
-def pearson_chi_square(response, predicted_response, prior_weights, variance,
-                       degrees_of_freedom):
+def pearson_chi_square(response, predicted_response, prior_weights, variance):
     '''Pearson’s chi-square statistic.
 
     Parameters
@@ -86,9 +85,8 @@ def pearson_chi_square(response, predicted_response, prior_weights, variance,
 
     '''
     residual = response - predicted_response
-    residual_degrees_of_freedom = response.shape[0] - degrees_of_freedom
     chi_square = prior_weights * residual ** 2 / variance(predicted_response)
-    return np.sum(chi_square) / residual_degrees_of_freedom
+    return np.sum(chi_square)
 
 
 def estimate_scale(family, response, predicted_response, prior_weights,
@@ -114,9 +112,10 @@ def estimate_scale(family, response, predicted_response, prior_weights,
         scale = 1.0
         is_estimated_scale = False
     else:
+        residual_degrees_of_freedom = response.shape[0] - degrees_of_freedom
         scale = pearson_chi_square(
             response, predicted_response, prior_weights, family.variance,
-            degrees_of_freedom)
+            degrees_of_freedom) / residual_degrees_of_freedom
         is_estimated_scale = True
     return scale, is_estimated_scale
 
