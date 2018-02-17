@@ -140,31 +140,29 @@ def estimate_aic(log_likelihood, degrees_of_freedom,
             + 2 * is_estimated_scale)
 
 
-def likelihood_ratio_test(log_likelihood_full, log_likelihood_restricted,
+def likelihood_ratio_test(deviance_full, deviance_restricted,
                           degrees_of_freedom_full,
-                          degrees_of_freedom_restricted, n_observations):
+                          degrees_of_freedom_restricted):
     '''Compare goodness of fit of nested models.
 
     Parameters
     ----------
-    log_likelihood_full : float
-    log_likelihood_restricted : float
+    deviance_full : float
+    deviance_restricted : float
     degrees_of_freedom_full : float
     degrees_of_freedom_restricted : float
     n_observations : int
 
     Returns
     -------
-    test_statistic : float
+    likelihood_ratio : float
     p_value : float
 
     '''
-    residual_degrees_of_freedom_full = n_observations - degrees_of_freedom_full
-    residual_degrees_of_freedom_restricted = (n_observations
-                                              - degrees_of_freedom_restricted)
-    degrees_of_freedom = (residual_degrees_of_freedom_full
-                          - residual_degrees_of_freedom_restricted)
-    test_statistic = 2 * (log_likelihood_full - log_likelihood_restricted)
-    p_value = scipy.stats.chi2.sf(test_statistic, df=degrees_of_freedom)
 
-    return test_statistic, p_value
+    degrees_of_freedom = (degrees_of_freedom_full
+                          - degrees_of_freedom_restricted)
+    likelihood_ratio = deviance_full - deviance_restricted
+    p_value = scipy.stats.chi2.sf(likelihood_ratio, df=degrees_of_freedom)
+
+    return likelihood_ratio, p_value
