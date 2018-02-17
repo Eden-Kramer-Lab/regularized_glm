@@ -140,6 +140,95 @@ def estimate_aic(log_likelihood, degrees_of_freedom,
             + 2 * is_estimated_scale)
 
 
+def estimate_aicc(log_likelihood, degrees_of_freedom, n_observations):
+    '''AIC accounting for sample size
+
+    Parameters
+    ----------
+    log_likelihood : float
+    degrees_of_freedom : int or float
+    n_observations : int
+
+    Returns
+    -------
+    aicc : float
+
+    '''
+    aic = estimate_aic(log_likelihood, degrees_of_freedom)
+    sample_size_penalty = (
+        2 * degrees_of_freedom ** 2 + 2 * degrees_of_freedom /
+        (n_observations - degrees_of_freedom - 1))
+    return aic + sample_size_penalty
+
+def estimate_bic(log_likelihood, degrees_of_freedom, n_observations):
+    return -2 * log_likelihood + np.log(n_observations) * degrees_of_freedom
+
+
+def estimate_unbiased_risk_estimator(deviance, n_observations,
+                                     degrees_of_freedom, extra_penalty=1):
+    '''Scaled AIC.
+
+    Use with Poisson or Binomail.
+
+    Parameters
+    ----------
+    deviance : float
+    n_observations : int
+    degrees_of_freedom : float
+    extra_penalty : float
+
+    Returns
+    -------
+    unbiased_risk_estimator : float
+
+    '''
+    penalty = 2 * extra_penalty * degrees_of_freedom / n_observations - 1
+    return deviance / n_observations + penalty
+
+
+def estimate_generalized_cross_validation(deviance, n_observations,
+                                          degrees_of_freedom, extra_penalty=1):
+        '''
+
+        Parameters
+        ----------
+        deviance : float
+        n_observations : int
+        degrees_of_freedom : float
+        extra_penalty : float
+
+        Returns
+        -------
+        generalized_cross_validation : float
+
+        '''
+    numerator = n_observations * deviance
+    denominator = (n_observations - extra_penalty * degrees_of_freedom) ** 2
+    return numerator / denominator
+
+
+def explained_deviance(full_deviance, deviance_func, response, weights, scale):
+    '''
+
+    Parameters
+    ----------
+    full_deviance : float
+    deviance_func : function
+    response : ndarray, shape (n_observations,)
+    weights : ndarray, shape (n_observations,)
+    scale : float
+
+    Returns
+    -------
+    explained_deviance : float
+
+    '''
+    null_predicted_response = response.mean() * np.ones_like(response)
+    null_deviance = deviance_func(
+        response, null_predicted_response, weights, scale)
+    return 1.0 - full_deviance.sum() / null_deviance.sum()
+
+
 def likelihood_ratio_test(deviance_full, deviance_restricted,
                           degrees_of_freedom_full,
                           degrees_of_freedom_restricted):
