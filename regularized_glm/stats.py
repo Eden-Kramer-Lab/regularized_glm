@@ -115,8 +115,8 @@ def estimate_scale(family, response, predicted_response, prior_weights,
     else:
         residual_degrees_of_freedom = response.shape[0] - degrees_of_freedom
         scale = pearson_chi_square(
-            response, predicted_response, prior_weights, family.variance,
-            degrees_of_freedom) / residual_degrees_of_freedom
+            response, predicted_response, prior_weights, family.variance
+            ) / residual_degrees_of_freedom
         is_estimated_scale = True
     return scale, is_estimated_scale
 
