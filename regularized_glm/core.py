@@ -102,8 +102,7 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
     deviance = family.deviance(response, predicted_response, weights, scale)
     log_likelihood = family.loglike(response, predicted_response, weights,
                                     scale)
-    aic = estimate_aic(log_likelihood, effective_degrees_of_freedom,
-                       is_estimated_scale)
+    aic = estimate_aic(log_likelihood, effective_degrees_of_freedom)
 
     return (coefficients, is_converged, coefficient_covariance, aic, deviance,
             effective_degrees_of_freedom, scale)

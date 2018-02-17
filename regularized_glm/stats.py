@@ -121,23 +121,20 @@ def estimate_scale(family, response, predicted_response, prior_weights,
     return scale, is_estimated_scale
 
 
-def estimate_aic(log_likelihood, degrees_of_freedom,
-                 is_estimated_scale):
+def estimate_aic(log_likelihood, degrees_of_freedom):
     '''Akaike information criterion.
 
     Parameters
     ----------
     log_likelihood : float
     degrees_of_freedom : float
-    is_estimated_scale : bool
 
     Returns
     -------
     Akaike_information_criterion : float
 
     '''
-    return (-2 * log_likelihood + 2 * (degrees_of_freedom + 1)
-            + 2 * is_estimated_scale)
+    return -2 * log_likelihood + 2 * degrees_of_freedom
 
 
 def estimate_aicc(log_likelihood, degrees_of_freedom, n_observations):
