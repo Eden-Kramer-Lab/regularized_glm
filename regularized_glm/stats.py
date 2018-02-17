@@ -133,7 +133,7 @@ def estimate_aic(log_likelihood, degrees_of_freedom,
 
     Returns
     -------
-    Akaike_information_criterion
+    Akaike_information_criterion : float
 
     '''
     return (-2 * log_likelihood + 2 * (degrees_of_freedom + 1)
