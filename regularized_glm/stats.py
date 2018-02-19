@@ -227,7 +227,7 @@ def explained_deviance(full_deviance, deviance_func, response, prior_weights,
     full_deviance : float
     deviance_func : function
     response : ndarray, shape (n_observations,)
-    weights : ndarray, shape (n_observations,)
+    prior_weights : ndarray, shape (n_observations,)
     scale : float
 
     Returns
@@ -237,7 +237,7 @@ def explained_deviance(full_deviance, deviance_func, response, prior_weights,
     '''
     null_predicted_response = response.mean() * np.ones_like(response)
     null_deviance = deviance_func(
-        response, null_predicted_response, weights, scale)
+        response, null_predicted_response, prior_weights, scale)
     return 1.0 - full_deviance.sum() / null_deviance.sum()
 
 
