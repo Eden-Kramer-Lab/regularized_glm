@@ -1,13 +1,17 @@
+from collections import namedtuple
+
 import numpy as np
 import scipy.linalg
 from statsmodels.api import families
 
-from .stats import (_weighted_design_matrix_svd, estimate_scale,
+from .stats import (_weighted_design_matrix_svd, estimate_aic, estimate_scale,
                     get_coefficient_covariance,
-                    get_effective_degrees_of_freedom, pearson_chi_square,
-                    estimate_aic)
+                    get_effective_degrees_of_freedom)
 
 _EPS = np.finfo(float).eps
+Results = namedtuple(
+    'Results', ['coefficients', 'is_converged', 'coefficient_covariance',
+                'AIC', 'deviance', 'degrees_of_freedom', 'scale'])
 
 
 def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
@@ -105,8 +109,15 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
         response, predicted_response, prior_weights, scale)
     aic = estimate_aic(log_likelihood, degrees_of_freedom)
 
-    return (coefficients, is_converged, coefficient_covariance, aic, deviance,
-            degrees_of_freedom, scale)
+    return Results(
+        coefficients=coefficients,
+        is_converged=is_converged,
+        coefficient_covariance=coefficient_covariance,
+        AIC=aic,
+        deviance=deviance,
+        degrees_of_freedom=degrees_of_freedom,
+        scale=scale
+    )
 
 
 def weighted_least_squares(response, design_matrix, weights):

@@ -44,7 +44,7 @@ def get_effective_degrees_of_freedom(U):
 
     Returns
     -------
-    effective_degrees_of_freedom : int or float
+    effective_degrees_of_freedom : float
 
     '''
     return np.sum(U * U)
@@ -218,8 +218,9 @@ def estimate_generalized_cross_validation(deviance, n_observations,
     return numerator / denominator
 
 
-def explained_deviance(full_deviance, deviance_func, response, weights, scale):
-    '''
+def explained_deviance(full_deviance, deviance_func, response, prior_weights,
+                       scale):
+    '''R_squared for generalized linear models.
 
     Parameters
     ----------
@@ -248,9 +249,13 @@ def likelihood_ratio_test(deviance_full, deviance_restricted,
     Parameters
     ----------
     deviance_full : float
+        Deviance of the more complicated model
     deviance_restricted : float
+        Deviance of the simpler model
     degrees_of_freedom_full : float
+        Degrees of freedom of the more complicated model
     degrees_of_freedom_restricted : float
+        Degrees of freedom of the simpler model
     n_observations : int
 
     Returns
