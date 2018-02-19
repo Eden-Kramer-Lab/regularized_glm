@@ -37,7 +37,7 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
     coefficient_covariance : ndarray, shape (n_covariates, n_covariates)
     aic : float
     deviance : float
-    degrees_of_freedom : float
+    effective_degrees_of_freedom : float
     scale : float
 
     '''
@@ -93,20 +93,20 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
     U, singular_values, Vt = _weighted_design_matrix_svd(
         design_matrix, sqrt_penalty_matrix, weights)
 
-    degrees_of_freedom = get_effective_degrees_of_freedom(U)
+    effective_degrees_of_freedom = get_effective_degrees_of_freedom(U)
     scale, is_estimated_scale = estimate_scale(
         family, response, predicted_response, prior_weights,
-        degrees_of_freedom)
+        effective_degrees_of_freedom)
     coefficient_covariance = get_coefficient_covariance(
         U, singular_values, Vt, scale)
     deviance = family.deviance(
         response, predicted_response, prior_weights, scale)
     log_likelihood = family.loglike(
         response, predicted_response, prior_weights, scale)
+    aic = estimate_aic(log_likelihood, effective_degrees_of_freedom)
 
     return (coefficients, is_converged, coefficient_covariance, aic, deviance,
             effective_degrees_of_freedom, scale)
-    aic = estimate_aic(log_likelihood, degrees_of_freedom)
 
 
 def weighted_least_squares(response, design_matrix, weights):
