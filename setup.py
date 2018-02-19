@@ -7,7 +7,7 @@ TESTS_REQUIRE = ['pytest >= 2.7.1']
 
 setup(
     name='regularized_glm',
-    version='0.0.2.dev0',
+    version='0.0.3.dev0',
     license='MIT',
     description=('L2-penalized generalized linear models'),
     author='Eric Denovellis',
