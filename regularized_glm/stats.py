@@ -19,7 +19,7 @@ def _weighted_design_matrix_svd(design_matrix, sqrt_penalty_matrix, weights):
     Vt : ndarray, shape ()
 
     '''
-    _, R = np.linalg.qr(np.sqrt(weights[:, np.newaxis]) * design_matrix)
+    _, R = np.linalg.qr(np.sqrt(weights) * design_matrix)
     U, singular_values, Vt = np.linalg.svd(
         np.concatenate((R, sqrt_penalty_matrix)), full_matrices=False)
     n_covariates = design_matrix.shape[1]

@@ -47,13 +47,16 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
     '''
     if design_matrix.ndim < 2:
         design_matrix = design_matrix[:, np.newaxis]
+    if response.ndim < 2:
+        response = response[:, np.newaxis]
+
     n_observations, n_covariates = design_matrix.shape
 
     if prior_weights is None:
-        prior_weights = np.ones((n_observations,), dtype=design_matrix.dtype)
+        prior_weights = np.ones_like(response)
 
     if offset is None:
-        offset = np.zeros((n_observations), dtype=response.dtype)
+        offset = np.zeros_like(response)
 
     if sqrt_penalty_matrix is None:
         sqrt_penalty_matrix = np.eye(n_covariates, dtype=design_matrix.dtype)
@@ -65,9 +68,9 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
 
     sqrt_penalty_matrix = np.sqrt(penalty) * sqrt_penalty_matrix
 
-    augmented_weights = np.ones((n_covariates,), dtype=response.dtype)
+    augmented_weights = np.ones_like(response[:n_covariates])
     full_design_matrix = np.concatenate((design_matrix, sqrt_penalty_matrix))
-    augmented_response = np.zeros((n_covariates,), dtype=response.dtype)
+    augmented_response = np.zeros_like(response[:n_covariates])
     coefficients = np.zeros((n_covariates,))
 
     for _ in range(max_iterations):
@@ -82,8 +85,8 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
 
         coefficients_old = coefficients.copy()
         coefficients = np.linalg.lstsq(
-            full_design_matrix * full_weights[:, np.newaxis],
             full_response * full_weights, rcond=None)[0]
+            full_design_matrix * full_weights,
 
         linear_predictor = offset + design_matrix @ coefficients
         predicted_response = family.link.inverse(linear_predictor)
@@ -137,7 +140,7 @@ def weighted_least_squares(response, design_matrix, weights):
 
     '''
     Q, R, pivots = scipy.linalg.qr(
-        design_matrix * weights[:, np.newaxis],
+        design_matrix * weights,
         mode='economic', pivoting=True, check_finite=False)
     z = Q.T @ (response * weights)
 
