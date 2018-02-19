@@ -85,8 +85,8 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
 
         coefficients_old = coefficients.copy()
         coefficients = np.linalg.lstsq(
-            full_response * full_weights, rcond=None)[0]
             full_design_matrix * full_weights,
+            full_response * full_weights)[0]
 
         linear_predictor = offset + design_matrix @ coefficients
         predicted_response = family.link.inverse(linear_predictor)
