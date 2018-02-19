@@ -238,7 +238,7 @@ def explained_deviance(full_deviance, deviance_func, response, prior_weights,
     null_predicted_response = response.mean() * np.ones_like(response)
     null_deviance = deviance_func(
         response, null_predicted_response, prior_weights, scale)
-    return 1.0 - full_deviance.sum() / null_deviance.sum()
+    return 1.0 - full_deviance / null_deviance
 
 
 def likelihood_ratio_test(deviance_full, deviance_restricted,
