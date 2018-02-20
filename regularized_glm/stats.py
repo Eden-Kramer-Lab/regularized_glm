@@ -20,8 +20,15 @@ def _weighted_design_matrix_svd(design_matrix, sqrt_penalty_matrix, weights):
 
     '''
     _, R = np.linalg.qr(np.sqrt(weights) * design_matrix)
-    U, singular_values, Vt = np.linalg.svd(
-        np.concatenate((R, sqrt_penalty_matrix)), full_matrices=False)
+    try:
+        U, singular_values, Vt = np.linalg.svd(
+            np.concatenate((R, sqrt_penalty_matrix)), full_matrices=False)
+    except (np.linalg.LinAlgError, ValueError):
+        m, n = np.concatenate((R, sqrt_penalty_matrix)).shape
+        k = np.min((m, n))
+        U = np.zeros((m, k))
+        singular_values = np.zeros((k,))
+        Vt = np.zeros((k, n))
     n_covariates = design_matrix.shape[1]
 
     # Keep the linearly independent columns using svd
