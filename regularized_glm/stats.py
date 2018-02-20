@@ -14,9 +14,9 @@ def _weighted_design_matrix_svd(design_matrix, sqrt_penalty_matrix, weights):
 
     Returns
     -------
-    U : ndarray, shape (n_observations, n_independent)
-    singular_values : ndarray, shape (n_independent, n_independent)
-    Vt : ndarray, shape ()
+    U : ndarray, shape (n_observations, min(n_observations, n_covariates))
+    singular_values : ndarray, shape (min(n_observations, n_covariates), )
+    Vt : ndarray, shape (min(n_observations, n_covariates), n_covariates)
 
     '''
     _, R = np.linalg.qr(np.sqrt(weights) * design_matrix)
@@ -35,9 +35,10 @@ def _weighted_design_matrix_svd(design_matrix, sqrt_penalty_matrix, weights):
     svd_error = (singular_values.max() * np.max(design_matrix.shape)
                  * np.finfo(singular_values.dtype).eps)
     is_independent = singular_values > svd_error
-    U = U[:n_covariates, is_independent]
-    singular_values = singular_values[is_independent]
-    Vt = Vt[:, is_independent]
+    U = U[:n_covariates, :]
+    U[:, ~is_independent] = np.nan
+    singular_values[~is_independent] = np.nan
+    Vt[:, ~is_independent] = np.nan
 
     return U, singular_values, Vt
 
