@@ -89,6 +89,7 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
                 full_design_matrix * full_weights,
                 full_response * full_weights)[0]
         except (np.linalg.LinAlgError, ValueError):
+            coefficients *= np.nan
             break
 
         linear_predictor = offset + design_matrix @ coefficients
