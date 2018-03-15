@@ -278,3 +278,9 @@ def likelihood_ratio_test(deviance_full, deviance_restricted,
     p_value = scipy.stats.chi2.sf(likelihood_ratio, df=degrees_of_freedom)
 
     return likelihood_ratio, p_value
+
+
+def parametric_bootstrap(coefficients, coefficient_covariance,
+                         n_samples=1000):
+    return np.random.multivariate_normal(
+        coefficients, coefficient_covariance, n_samples).T
