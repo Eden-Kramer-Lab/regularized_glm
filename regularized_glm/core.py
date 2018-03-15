@@ -116,7 +116,7 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
     aic = estimate_aic(log_likelihood, degrees_of_freedom)
 
     return Results(
-        coefficients=coefficients,
+        coefficients=np.squeeze(coefficients),
         is_converged=is_converged,
         coefficient_covariance=coefficient_covariance,
         AIC=aic,
