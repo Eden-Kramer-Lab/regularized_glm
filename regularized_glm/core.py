@@ -87,7 +87,7 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
         try:
             coefficients = np.linalg.lstsq(
                 full_design_matrix * full_weights,
-                full_response * full_weights)[0]
+                full_response * full_weights, rcond=None)[0]
         except (np.linalg.LinAlgError, ValueError):
             coefficients *= np.nan
             break

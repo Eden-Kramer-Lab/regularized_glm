@@ -2,7 +2,7 @@
 
 from setuptools import find_packages, setup
 
-INSTALL_REQUIRES = ['numpy >= 1.11', 'statsmodels', 'scipy']
+INSTALL_REQUIRES = ['numpy >= 1.14', 'statsmodels', 'scipy']
 TESTS_REQUIRE = ['pytest >= 2.7.1']
 
 setup(
