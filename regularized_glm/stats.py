@@ -282,5 +282,18 @@ def likelihood_ratio_test(deviance_full, deviance_restricted,
 
 def parametric_bootstrap(coefficients, coefficient_covariance,
                          n_samples=1000):
+    '''
+
+    Parameters
+    ----------
+    coefficients : ndarray, shape (n_coefficients,)
+    coefficient_covariance : ndarray, shape (n_coefficients, n_coefficients)
+    n_samples : int, optional
+
+    Returns
+    -------
+    bootstrapped_coefficients : shape (n_coefficients, n_samples)
+
+    '''
     return np.random.multivariate_normal(
         coefficients, coefficient_covariance, n_samples).T
