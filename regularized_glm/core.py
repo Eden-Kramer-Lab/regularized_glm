@@ -1,4 +1,5 @@
 from collections import namedtuple
+from logging import getLogger
 
 import numpy as np
 import scipy.linalg
@@ -12,6 +13,8 @@ _EPS = np.finfo(float).eps
 Results = namedtuple(
     'Results', ['coefficients', 'is_converged', 'coefficient_covariance',
                 'AIC', 'deviance', 'degrees_of_freedom', 'scale'])
+
+logger = getLogger(__name__)
 
 
 def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
@@ -89,6 +92,8 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
                 full_design_matrix * full_weights,
                 full_response * full_weights, rcond=None)[0]
         except (np.linalg.LinAlgError, ValueError):
+            logger.warn(
+                'Weighted least squares failed. Returning NaN coefficiients.')
             coefficients *= np.nan
             break
 
