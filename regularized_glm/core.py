@@ -57,6 +57,8 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
 
     if prior_weights is None:
         prior_weights = np.ones_like(response)
+    elif prior_weights.ndim < 2:
+        prior_weights = prior_weights[:, np.newaxis]
 
     if offset is None:
         offset = np.zeros_like(response)
