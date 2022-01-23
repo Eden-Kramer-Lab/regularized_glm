@@ -1,3 +1,5 @@
+[![PR Test](https://github.com/Eden-Kramer-Lab/regularized_glm/actions/workflows/PR-test.yml/badge.svg)](https://github.com/Eden-Kramer-Lab/regularized_glm/actions/workflows/PR-test.yml)
+
 # regularized_glm
 
 A simple python package for fitting L2- and smoothing-penalized generalized linear models.
