@@ -12,7 +12,8 @@ from .stats import (_weighted_design_matrix_svd, estimate_aic, estimate_scale,
 _EPS = np.finfo(float).eps
 Results = namedtuple(
     'Results', ['coefficients', 'is_converged', 'coefficient_covariance',
-                'AIC', 'deviance', 'degrees_of_freedom', 'scale'])
+                'log_likelihood', 'AIC', 'deviance',
+                'degrees_of_freedom', 'scale'])
 
 logger = getLogger(__name__)
 
