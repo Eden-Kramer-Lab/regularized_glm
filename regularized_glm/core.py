@@ -4,25 +4,48 @@ from logging import getLogger
 import numpy as np
 import scipy.linalg
 from statsmodels.api import families
+from statsmodels.genmod.families.family import Family
 
-from .stats import (_weighted_design_matrix_svd, estimate_aic, estimate_scale,
-                    get_coefficient_covariance,
-                    get_effective_degrees_of_freedom)
+from regularized_glm.stats import (
+    _weighted_design_matrix_svd,
+    estimate_aic,
+    estimate_scale,
+    get_coefficient_covariance,
+    get_effective_degrees_of_freedom,
+)
 
 _EPS = np.finfo(float).eps
 Results = namedtuple(
-    'Results', ['coefficients', 'is_converged', 'coefficient_covariance',
-                'log_likelihood', 'AIC', 'deviance',
-                'degrees_of_freedom', 'scale'])
+    "Results",
+    [
+        "coefficients",
+        "is_converged",
+        "coefficient_covariance",
+        "log_likelihood",
+        "AIC",
+        "deviance",
+        "degrees_of_freedom",
+        "scale",
+    ],
+)
 
 logger = getLogger(__name__)
 
+from typing import Optional
 
-def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
-                   penalty=_EPS, family=families.Gaussian(),
-                   max_iterations=25, prior_weights=None,
-                   offset=None, tolerance=1E-8):
-    '''Estimate coefficients and associated statistics of models in the
+
+def penalized_IRLS(
+    design_matrix: np.ndarray,
+    response: np.ndarray,
+    sqrt_penalty_matrix: Optional[np.ndarray] = None,
+    penalty: float = _EPS,
+    family: Family = families.Gaussian(),
+    max_iterations: int = 25,
+    prior_weights: Optional[np.ndarray] = None,
+    offset: Optional[np.ndarray] = None,
+    tolerance: float = 1e-8,
+) -> Results:
+    """Estimate coefficients and associated statistics of models in the
     exponential family.
 
     Parameters
@@ -48,13 +71,13 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
     degrees_of_freedom : float
     scale : float
 
-    '''
+    """
     if design_matrix.ndim < 2:
         design_matrix = design_matrix[:, np.newaxis]
     if response.ndim < 2:
         response = response[:, np.newaxis]
 
-    n_observations, n_covariates = design_matrix.shape
+    _, n_covariates = design_matrix.shape
 
     if prior_weights is None:
         prior_weights = np.ones_like(response)
@@ -76,15 +99,19 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
 
     augmented_weights = np.ones_like(response[:n_covariates])
     full_design_matrix = np.concatenate((design_matrix, sqrt_penalty_matrix))
-    augmented_response = np.zeros_like(response[:n_covariates])
+    augmented_response = np.zeros_like((response[:n_covariates]))
     coefficients = np.zeros((n_covariates,))
 
     for _ in range(max_iterations):
         link_derivative = family.link.deriv(predicted_response)
-        pseudo_data = (linear_predictor + (response - predicted_response)
-                       * link_derivative - offset)
-        weights = prior_weights / (family.variance(predicted_response)
-                                   * link_derivative ** 2)
+        pseudo_data = (
+            linear_predictor
+            + (response - predicted_response) * link_derivative
+            - offset
+        )
+        weights = prior_weights / (
+            family.variance(predicted_response) * link_derivative**2
+        )
 
         full_response = np.concatenate((pseudo_data, augmented_response))
         full_weights = np.concatenate((np.sqrt(weights), augmented_weights))
@@ -93,10 +120,11 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
         try:
             coefficients = np.linalg.lstsq(
                 full_design_matrix * full_weights,
-                full_response * full_weights, rcond=None)[0]
+                full_response * full_weights,
+                rcond=None,
+            )[0]
         except (np.linalg.LinAlgError, ValueError):
-            logger.warn(
-                'Weighted least squares failed. Returning NaN coefficiients.')
+            logger.warn("Weighted least squares failed. Returning NaN coefficiients.")
             coefficients *= np.nan
             break
 
@@ -110,18 +138,16 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
             break
 
     U, singular_values, Vt = _weighted_design_matrix_svd(
-        design_matrix, sqrt_penalty_matrix, weights)
+        design_matrix, sqrt_penalty_matrix, weights
+    )
 
     degrees_of_freedom = get_effective_degrees_of_freedom(U)
-    scale, is_estimated_scale = estimate_scale(
-        family, response, predicted_response, prior_weights,
-        degrees_of_freedom)
-    coefficient_covariance = get_coefficient_covariance(
-        U, singular_values, Vt, scale)
-    deviance = family.deviance(
-        response, predicted_response, prior_weights, scale)
-    log_likelihood = family.loglike(
-        response, predicted_response, prior_weights, scale)
+    scale, _ = estimate_scale(
+        family, response, predicted_response, prior_weights, degrees_of_freedom
+    )
+    coefficient_covariance = get_coefficient_covariance(U, singular_values, Vt, scale)
+    deviance = family.deviance(response, predicted_response, prior_weights, scale)
+    log_likelihood = family.loglike(response, predicted_response, prior_weights, scale)
     aic = estimate_aic(log_likelihood, degrees_of_freedom)
 
     return Results(
@@ -132,34 +158,36 @@ def penalized_IRLS(design_matrix, response, sqrt_penalty_matrix=None,
         AIC=aic,
         deviance=deviance,
         degrees_of_freedom=degrees_of_freedom,
-        scale=scale
+        scale=scale,
     )
 
 
-def weighted_least_squares(response, design_matrix, weights):
-    '''Fit weighted least squares while handling rank deficiencies
+def weighted_least_squares(
+    response: np.ndarray, design_matrix: np.ndarray, weights: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
+    """Fit weighted least squares while handling rank deficiencies
 
     Uses the rank revealing QR.
 
     Parameters
     ----------
-    response : ndarray, shape (n_observations,)
-    design_matrix : ndarray, shape (n_observations, n_covariates)
-    weights : ndarray, shape (n_observations,)
+    response : np.ndarray, shape (n_observations,)
+    design_matrix : np.ndarray, shape (n_observations, n_covariates)
+    weights : np.ndarray, shape (n_observations,)
 
     Returns
     -------
-    coefficients : ndarray, shape (n_covariates)
+    coefficients : np.ndarray, shape (n_covariates)
+    R : np.ndarray
 
-    '''
+    """
     Q, R, pivots = scipy.linalg.qr(
-        design_matrix * weights,
-        mode='economic', pivoting=True, check_finite=False)
+        design_matrix * weights, mode="economic", pivoting=True, check_finite=False
+    )
     z = Q.T @ (response * weights)
 
     # if rank deficient, keep only the independent columns
-    qr_error = (np.abs(R[0, 0]) * np.max(design_matrix.shape)
-                * np.finfo(R.dtype).eps)
+    qr_error = np.abs(R[0, 0]) * np.max(design_matrix.shape) * np.finfo(R.dtype).eps
     is_keep = np.abs(np.diag(R)) > qr_error
     n_covariates = design_matrix.shape[1]
 

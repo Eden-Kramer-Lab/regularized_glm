@@ -3,8 +3,10 @@ import scipy.stats
 from statsmodels.api import families
 
 
-def _weighted_design_matrix_svd(design_matrix, sqrt_penalty_matrix, weights):
-    '''
+def _weighted_design_matrix_svd(
+    design_matrix: np.ndarray, sqrt_penalty_matrix: np.ndarray, weights: np.ndarray
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
 
     Parameters
     ----------
@@ -18,11 +20,12 @@ def _weighted_design_matrix_svd(design_matrix, sqrt_penalty_matrix, weights):
     singular_values : ndarray, shape (min(n_observations, n_covariates), )
     Vt : ndarray, shape (min(n_observations, n_covariates), n_covariates)
 
-    '''
+    """
     _, R = np.linalg.qr(np.sqrt(weights) * design_matrix)
     try:
         U, singular_values, Vt = np.linalg.svd(
-            np.concatenate((R, sqrt_penalty_matrix)), full_matrices=False)
+            np.concatenate((R, sqrt_penalty_matrix)), full_matrices=False
+        )
     except (np.linalg.LinAlgError, ValueError):
         m, n = np.concatenate((R, sqrt_penalty_matrix)).shape
         k = np.min((m, n))
@@ -32,8 +35,11 @@ def _weighted_design_matrix_svd(design_matrix, sqrt_penalty_matrix, weights):
     n_covariates = design_matrix.shape[1]
 
     # Keep the linearly independent columns using svd
-    svd_error = (singular_values.max() * np.max(design_matrix.shape)
-                 * np.finfo(singular_values.dtype).eps)
+    svd_error = (
+        singular_values.max()
+        * np.max(design_matrix.shape)
+        * np.finfo(singular_values.dtype).eps
+    )
     is_independent = singular_values > svd_error
     U = U[:n_covariates, :]
     U[:, ~is_independent] = np.nan
@@ -43,8 +49,8 @@ def _weighted_design_matrix_svd(design_matrix, sqrt_penalty_matrix, weights):
     return U, singular_values, Vt
 
 
-def get_effective_degrees_of_freedom(U):
-    '''Degrees of freedom that account for regularization.
+def get_effective_degrees_of_freedom(U: np.ndarray) -> float:
+    """Degrees of freedom that account for regularization.
 
     Parameters
     ----------
@@ -54,12 +60,14 @@ def get_effective_degrees_of_freedom(U):
     -------
     effective_degrees_of_freedom : float
 
-    '''
+    """
     return np.sum(U * U)
 
 
-def get_coefficient_covariance(U, singular_values, Vt, scale):
-    '''Frequentist Covariance Sandwich Estimator.
+def get_coefficient_covariance(
+    U: np.ndarray, singular_values: np.ndarray, Vt: np.ndarray, scale: float
+) -> np.ndarray:
+    """Frequentist Covariance Sandwich Estimator.
 
     Parameters
     ----------
@@ -72,13 +80,18 @@ def get_coefficient_covariance(U, singular_values, Vt, scale):
     -------
     coefficient_covariance : ndarray, shape (n_independent, n_independent)
 
-    '''
+    """
     PKt = Vt @ np.diag(1 / singular_values) @ U.T
     return PKt @ PKt.T * scale
 
 
-def pearson_chi_square(response, predicted_response, prior_weights, variance):
-    '''Pearson’s chi-square statistic.
+def pearson_chi_square(
+    response: np.ndarray,
+    predicted_response: np.ndarray,
+    prior_weights: np.ndarray,
+    variance: np.ndarray,
+) -> float:
+    """Pearson’s chi-square statistic.
 
     Parameters
     ----------
@@ -92,15 +105,20 @@ def pearson_chi_square(response, predicted_response, prior_weights, variance):
     -------
     chi_square : float
 
-    '''
+    """
     residual = response - predicted_response
-    chi_square = prior_weights * residual ** 2 / variance(predicted_response)
+    chi_square = prior_weights * residual**2 / variance(predicted_response)
     return np.sum(chi_square)
 
 
-def estimate_scale(family, response, predicted_response, prior_weights,
-                   degrees_of_freedom):
-    '''If the scale has to be estimated, the scale is estimated as Pearson's
+def estimate_scale(
+    family,
+    response: np.ndarray,
+    predicted_response: np.ndarray,
+    prior_weights: np.ndarray,
+    degrees_of_freedom: np.ndarray,
+) -> tuple[float, bool]:
+    """If the scale has to be estimated, the scale is estimated as Pearson's
     chi square.
 
     Parameters
@@ -116,21 +134,24 @@ def estimate_scale(family, response, predicted_response, prior_weights,
     scale : float
     is_estimated_scale : bool
 
-    '''
+    """
     if isinstance(family, (families.Binomial, families.Poisson)):
         scale = 1.0
         is_estimated_scale = False
     else:
         residual_degrees_of_freedom = response.shape[0] - degrees_of_freedom
-        scale = pearson_chi_square(
-            response, predicted_response, prior_weights, family.variance
-        ) / residual_degrees_of_freedom
+        scale = (
+            pearson_chi_square(
+                response, predicted_response, prior_weights, family.variance
+            )
+            / residual_degrees_of_freedom
+        )
         is_estimated_scale = True
     return scale, is_estimated_scale
 
 
-def estimate_aic(log_likelihood, degrees_of_freedom):
-    '''Akaike information criterion.
+def estimate_aic(log_likelihood: float, degrees_of_freedom: float) -> float:
+    """Akaike information criterion.
 
     Parameters
     ----------
@@ -141,12 +162,14 @@ def estimate_aic(log_likelihood, degrees_of_freedom):
     -------
     Akaike_information_criterion : float
 
-    '''
+    """
     return -2 * log_likelihood + 2 * degrees_of_freedom
 
 
-def estimate_aicc(log_likelihood, degrees_of_freedom, n_observations):
-    '''AIC accounting for sample size
+def estimate_aicc(
+    log_likelihood: float, degrees_of_freedom: float, n_observations: int
+) -> float:
+    """AIC accounting for sample size
 
     Parameters
     ----------
@@ -158,16 +181,18 @@ def estimate_aicc(log_likelihood, degrees_of_freedom, n_observations):
     -------
     aicc : float
 
-    '''
+    """
     aic = estimate_aic(log_likelihood, degrees_of_freedom)
-    sample_size_penalty = (
-        2 * degrees_of_freedom ** 2 + 2 * degrees_of_freedom /
-        (n_observations - degrees_of_freedom - 1))
+    sample_size_penalty = 2 * degrees_of_freedom**2 + 2 * degrees_of_freedom / (
+        n_observations - degrees_of_freedom - 1
+    )
     return aic + sample_size_penalty
 
 
-def estimate_bic(log_likelihood, degrees_of_freedom, n_observations):
-    '''Bayesian Information Criterion
+def estimate_bic(
+    log_likelihood: float, degrees_of_freedom: float, n_observations: int
+) -> float:
+    """Bayesian Information Criterion
 
     Parameters
     ----------
@@ -179,13 +204,17 @@ def estimate_bic(log_likelihood, degrees_of_freedom, n_observations):
     -------
     bic : float
 
-    '''
+    """
     return -2 * log_likelihood + np.log(n_observations) * degrees_of_freedom
 
 
-def estimate_unbiased_risk_estimator(deviance, n_observations,
-                                     degrees_of_freedom, extra_penalty=1):
-    '''Scaled AIC.
+def estimate_unbiased_risk_estimator(
+    deviance: float,
+    n_observations: int,
+    degrees_of_freedom: float,
+    extra_penalty: float = 1,
+) -> float:
+    """Scaled AIC.
 
     Use with Poisson or Binomail.
 
@@ -200,14 +229,18 @@ def estimate_unbiased_risk_estimator(deviance, n_observations,
     -------
     unbiased_risk_estimator : float
 
-    '''
+    """
     penalty = 2 * extra_penalty * degrees_of_freedom / n_observations - 1
     return deviance / n_observations + penalty
 
 
-def estimate_generalized_cross_validation(deviance, n_observations,
-                                          degrees_of_freedom, extra_penalty=1):
-    '''
+def estimate_generalized_cross_validation(
+    deviance: float,
+    n_observations: int,
+    degrees_of_freedom: float,
+    extra_penalty: float = 1,
+) -> float:
+    """
 
     Parameters
     ----------
@@ -220,15 +253,20 @@ def estimate_generalized_cross_validation(deviance, n_observations,
     -------
     generalized_cross_validation : float
 
-    '''
+    """
     numerator = n_observations * deviance
     denominator = (n_observations - extra_penalty * degrees_of_freedom) ** 2
     return numerator / denominator
 
 
-def explained_deviance(full_deviance, deviance_func, response, prior_weights,
-                       scale):
-    '''R_squared for generalized linear models.
+def explained_deviance(
+    full_deviance: float,
+    deviance_func,
+    response: np.ndarray,
+    prior_weights: np.ndarray,
+    scale: float,
+) -> float:
+    """R_squared for generalized linear models.
 
     Parameters
     ----------
@@ -242,17 +280,21 @@ def explained_deviance(full_deviance, deviance_func, response, prior_weights,
     -------
     explained_deviance : float
 
-    '''
+    """
     null_predicted_response = response.mean() * np.ones_like(response)
     null_deviance = deviance_func(
-        response, null_predicted_response, prior_weights, scale)
+        response, null_predicted_response, prior_weights, scale
+    )
     return 1.0 - full_deviance / null_deviance
 
 
-def likelihood_ratio_test(deviance_full, deviance_restricted,
-                          degrees_of_freedom_full,
-                          degrees_of_freedom_restricted):
-    '''Compare goodness of fit of nested models.
+def likelihood_ratio_test(
+    deviance_full: float,
+    deviance_restricted: float,
+    degrees_of_freedom_full: float,
+    degrees_of_freedom_restricted: float,
+) -> tuple[float, float]:
+    """Compare goodness of fit of nested models.
 
     Parameters
     ----------
@@ -264,25 +306,24 @@ def likelihood_ratio_test(deviance_full, deviance_restricted,
         Degrees of freedom of the more complicated model
     degrees_of_freedom_restricted : float
         Degrees of freedom of the simpler model
-    n_observations : int
 
     Returns
     -------
     likelihood_ratio : float
     p_value : float
 
-    '''
-    degrees_of_freedom = (degrees_of_freedom_restricted
-                          - degrees_of_freedom_full)
+    """
+    degrees_of_freedom = degrees_of_freedom_restricted - degrees_of_freedom_full
     likelihood_ratio = deviance_restricted - deviance_full
     p_value = scipy.stats.chi2.sf(likelihood_ratio, df=degrees_of_freedom)
 
     return likelihood_ratio, p_value
 
 
-def parametric_bootstrap(coefficients, coefficient_covariance,
-                         n_samples=1000):
-    '''
+def parametric_bootstrap(
+    coefficients: float, coefficient_covariance: float, n_samples: int = 1000
+) -> np.ndarray:
+    """
 
     Parameters
     ----------
@@ -294,6 +335,7 @@ def parametric_bootstrap(coefficients, coefficient_covariance,
     -------
     bootstrapped_coefficients : shape (n_coefficients, n_samples)
 
-    '''
+    """
     return np.random.multivariate_normal(
-        coefficients, coefficient_covariance, n_samples).T
+        coefficients, coefficient_covariance, n_samples
+    ).T
