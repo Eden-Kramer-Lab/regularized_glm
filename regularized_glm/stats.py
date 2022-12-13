@@ -1,6 +1,9 @@
+from typing import Callable
+
 import numpy as np
 import scipy.stats
 from statsmodels.api import families
+from statsmodels.genmod.families.family import Family
 
 
 def _weighted_design_matrix_svd(
@@ -112,7 +115,7 @@ def pearson_chi_square(
 
 
 def estimate_scale(
-    family,
+    family: Family,
     response: np.ndarray,
     predicted_response: np.ndarray,
     prior_weights: np.ndarray,
@@ -261,7 +264,7 @@ def estimate_generalized_cross_validation(
 
 def explained_deviance(
     full_deviance: float,
-    deviance_func,
+    deviance_func: Callable,
     response: np.ndarray,
     prior_weights: np.ndarray,
     scale: float,
